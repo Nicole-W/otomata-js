@@ -42,7 +42,7 @@ class App {
 
         this.grid = document.querySelector('.grid');
         this.grid.addEventListener('click', this.onClick.bind(this));
-        this.grid.addEventListener('contextmenu', ev => ev.preventDefault());
+        this.grid.addEventListener('contextmenu', this.onRightClick.bind(this));
 
         for (let i = 0; i < size; ++i) {
             for (let j = 0; j < size; ++j) {
@@ -71,7 +71,6 @@ class App {
 
     onClick(ev) {
         let cellEl = ev.target;
-
         if (!cellEl.classList.contains('cell'))
             return;
         
@@ -82,6 +81,19 @@ class App {
         else if (this.cells[index].state == States.RIGHT)
             this.cells[index].state = States.EMPTY;
         else this.cells[index].state = this.rotate(this.cells[index].state);
+        this.render();
+    }
+
+    onRightClick(ev) {
+        ev.preventDefault();
+
+        let cellEl = ev.target;
+
+        if (!cellEl.classList.contains('cell'))
+            return;
+
+        let index = Array.prototype.indexOf.call(cellEl.parentNode.children, cellEl)
+        this.cells[index].state = States.EMPTY;
         this.render();
     }
 
@@ -252,6 +264,17 @@ class App {
         
         let aud = new Audio(`audio/scale/${str}.ogg`);
         aud.autoplay = true;
+    }
+
+    preload() {
+        let scale = ['c5', 'd5', 'e5', 'f5', 'g5', 'a6', 'b6', 'c6', 'd6'];
+
+        scale.forEach(() => {
+            let str = scale[note];
+
+            let aud = new Audio(`audio/scale/${str}.ogg`);
+            aud.autoplay = false;
+        });
     }
 
 }
