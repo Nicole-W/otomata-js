@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script type='module' src='src/app.js'></script>
+        <style>
+            body {
+                margin: 0;
+                background: #434856;
+                text-align: center;
+            }
+
+            button {
+                border: none;
+                color: white;
+                background: #142450;
+                padding: min(1.3vw, 1.3vh);
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-weight: bold;
+                border-radius: min(0.5vw, 0.5vh);
+                font-size: min(1.6vw, 1.6vh);
+            }
+
+            .grid {
+                margin: min(5vw, 5vh) auto 10px auto;
+                width: min(85vw, 85vh);
+                height: min(85vw, 85vh);
+            }
+
+            .cell {
+                position: relative;
+                background: #9a9a9a;
+                box-shadow: inset 0px min(0.3vw, 0.3vh) min(1vw, 1vh) min(-0.1vw, -0.1vh);
+                border-radius: 3px;
+                margin: 0.1vw;
+            }
+
+            .cell::after {
+                content: '';
+                display: block;
+                position: absolute;
+                left: 10%;
+                right: 10%;
+                top: 10%;
+                bottom: 10%;
+            }
+
+            .cell:not(.empty)::after {
+                background-image: url('asset/arrow.svg');
+                background-repeat: no-repeat;
+            }
+
+            .cell.up::after {
+                /* background: url('asset/arrow.svg'); */
+                transform: rotate(-90deg);
+                /* animation: up 250ms linear; */
+            }
+
+            .cell.down::after {
+                transform: rotate(90deg);
+                /* animation: down 250ms linear; */
+            }
+
+            .cell.left::after {
+                transform: rotate(180deg);
+                /* animation: left 250ms linear; */
+            }
+
+            .cell.right::after {
+                transform: rotate(0deg);
+                /* animation: right 250ms linear; */
+            }
+
+            .cell.up.left::after, 
+            .cell.up.down::after, 
+            .cell.up.right::after,
+            .cell.left.down::after, 
+            .cell.left.right::after, 
+            .cell.right.down::after {
+                background-image: url('asset/circle.svg');
+            }
+
+            @keyframes up {
+                from {
+                    transform: rotate(-90deg) translateX(-100%);
+                }
+
+                to {
+                    transform: rotate(-90deg) translateX(0);
+                }
+            }
+
+            @keyframes down {
+                from {
+                    transform: rotate(90deg) translateX(-100%);
+                }
+
+                to {
+                    transform: rotate(90deg) translateX(0);
+                }
+            }
+
+            
+
+            @keyframes left {
+                from {
+                    transform: rotate(180deg) translateX(-100%);
+                }
+
+                to {
+                    transform: rotate(180deg) translateX(0);
+                }
+            }
+
+            @keyframes right {
+                from {
+                    transform: rotate(0deg) translateX(-100%);
+                }
+
+                to {
+                    transform: rotate(0deg) translateX(0);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class='grid'>
+        </div>
+        <button class='toggle'>Toggle Playback</button>
+        <button class='step'>Step</button>
+    </body>
+</html>
