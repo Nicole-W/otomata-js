@@ -32,7 +32,10 @@
                 box-shadow: inset 0px min(0.3vw, 0.3vh) min(1vw, 1vh) min(-0.1vw, -0.1vh);
                 border-radius: 3px;
                 margin: 0.1vw;
+
+                /* transition: background 0.1s ease-in-out; */
             }
+
 
             .cell::after {
                 content: '';
@@ -70,6 +73,11 @@
                 /* animation: right 250ms linear; */
             }
 
+            .cell.ding {
+                /* background: #CCC; */
+                animation: ding 0.15s linear;
+            }
+
             .cell.up.left::after, 
             .cell.up.down::after, 
             .cell.up.right::after,
@@ -79,6 +87,20 @@
                 background-image: url('asset/circle.svg');
             }
 
+            @keyframes ding {
+                0% {
+                    background: #9a9a9a;
+                }
+
+                50% {
+                    background: #BBB;
+                }
+
+                100% {
+                    background: #9a9a9a;
+                }
+            }
+            
             @keyframes up {
                 from {
                     transform: rotate(-90deg) translateX(-100%);

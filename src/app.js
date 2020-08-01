@@ -4,13 +4,17 @@ const States = {
     DOWN : 2,
     LEFT : 4,
     RIGHT : 8,
-    VERTICAL : 16,
-    HORIZONTAL : 32
+}
+
+const Axis = {
+    HORIZONTAL: 1,
+    VERTICAL: 2
 }
 
 class Cell {
     constructor() {
         this.state = States.EMPTY;
+        this.ding = -1000;
     }
 }
 
@@ -166,7 +170,7 @@ class App {
 
             if (cell.state & States.UP) {
                 if (y == 0) {
-                    this.ding(x);
+                    this.ding(x, Axis.VERTICAL);
                     console.log('DING');
                     this.applyState(this.cellBuff, x, y + 1, States.DOWN);
                 }
@@ -177,7 +181,7 @@ class App {
 
             if (cell.state & States.DOWN) {
                 if (y >= this.size - 1) {
-                    this.ding(x);
+                    this.ding(x, Axis.VERTICAL);
                     console.log('DING');
                     this.applyState(this.cellBuff, x, y - 1, States.UP);
                 }
@@ -189,7 +193,7 @@ class App {
 
             if (cell.state & States.LEFT) {
                 if (x == 0) {
-                    this.ding(y);
+                    this.ding(y, Axis.HORIZONTAL);
                     console.log('DING');
                     this.applyState(this.cellBuff, x + 1, y, States.RIGHT);
                 } else {
@@ -199,7 +203,7 @@ class App {
 
             if (cell.state & States.RIGHT) {
                 if (x >= this.size - 1) {
-                    this.ding(y);
+                    this.ding(y, Axis.HORIZONTAL);
                     console.log('DING');
                     this.applyState(this.cellBuff, x - 1, y, States.LEFT);
                 } else {
@@ -221,7 +225,9 @@ class App {
         this.cells = this.cellBuff;
         this.cellBuff = temp;
 
-        this.render();
+        setTimeout(() => {
+            this.render();
+        }, 0);
 
         setTimeout(() => {
             this.update();
@@ -234,6 +240,12 @@ class App {
 
             let cellEl = this.grid.children[i];
             cellEl.classList.value = 'cell';
+            
+            let now = performance.now();
+
+            if (now - cellEl.lastDing < 250) {
+                cellEl.classList.add('ding');
+            }
 
             if (cell.state == States.EMPTY) {
                 cellEl.classList.add('empty');
@@ -258,12 +270,28 @@ class App {
         }
     }
 
-    ding(note) {
+    ding(note, axis) {
+        // let scale = ['floor-tom', 'low-tom', 'mid-tom', 'kick', 'snare', 'snare-side', 'closed-hat', 'pedal-high-hat', 'half-high-hat'];
+        // let scale = ['kick', 'snare', 'kick', 'snare', 'kick', 'snare-side', 'closed-hat', 'pedal-high-hat', 'half-high-hat'];
         let scale = ['c5', 'd5', 'e5', 'f5', 'g5', 'a6', 'b6', 'c6', 'd6'];
         let str = scale[note];
         
         let aud = new Audio(`audio/scale/${str}.ogg`);
         aud.autoplay = true;
+
+        for (let j = 0; j < this.size; ++j) {
+            let index;
+            if (axis == Axis.HORIZONTAL) {
+                index = j + note * this.size;
+            } else {
+                index = note + j * this.size;
+            }
+            
+            let cellEl = this.grid.children[index]
+            cellEl.lastDing = performance.now();
+
+            cellEl.classList.remove('ding');
+        }
     }
 
     preload() {
