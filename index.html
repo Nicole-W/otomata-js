@@ -21,7 +21,7 @@
             }
 
             .grid {
-                margin: min(5vw, 5vh) auto 10px auto;
+                margin: min(2vw, 2vh) auto 10px auto;
                 width: min(80vw, 80vh);
                 height: min(80vw, 80vh);
             }
@@ -41,10 +41,10 @@
                 content: '';
                 display: block;
                 position: absolute;
-                left: 10%;
-                right: 10%;
-                top: 10%;
-                bottom: 10%;
+                left: 20%;
+                right: 20%;
+                top: 20%;
+                bottom: 20%;
             }
 
             .cell:not(.empty)::after {
@@ -168,6 +168,15 @@
         </style>
     </head>
     <body>
+        <br/>
+        <label>Instrument:</label>
+        <select class='instrument'>
+            <option>Default</option>
+            <option>Bottle</option>
+            <option>Kidsos</option>
+            <option>Drumkit</option>
+        </select>
+
         <div class='grid'>
         </div>
         <button class='toggle'>Toggle Playback</button>

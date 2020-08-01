@@ -1,5 +1,27 @@
 import clipboard from './clipboard.js';;
 
+const Instruments = {
+    Default : {
+        'folder': 'scale',
+        'notes': ['c5', 'd5', 'e5', 'f5', 'g5', 'a6', 'b6', 'c6', 'd6']
+    },
+
+    Bottle: {
+        'folder': 'bottle',
+        'notes': ['c5', 'd5', 'e5', 'f5', 'g5', 'a6', 'b6', 'c6', 'd6'],
+    },
+
+    Kidsos: {
+        'folder': 'kidsos',
+        'notes': ['c5', 'd5', 'e5', 'f5', 'g5', 'a6', 'b6', 'c6', 'd6'],
+    },
+
+    Drumkit: {
+        'folder': 'drums',
+        'notes': ['kick', 'snare', 'kick', 'snare', 'kick', 'snare-side', 'closed-hat', 'pedal-high-hat', 'half-high-hat'],
+    }
+}
+
 const States = {
     EMPTY : 0,
     UP : 1,
@@ -29,6 +51,7 @@ class App {
         this.paused = true;
         this.size = 9;
 
+        this.setInstrument(Instruments.Default);
         this.init();
         this.createGrid();
 
@@ -47,6 +70,15 @@ class App {
     init() {
 
         window.addEventListener('hashchange', this.loadFromHash.bind(this));
+        document.body.addEventListener('keydown', (ev) => {
+            if (ev.which == 32)
+                this.toggle()
+        });
+
+        let instSel = document.querySelector('.instrument');
+        instSel.addEventListener('change', () => {
+            this.setInstrument(Instruments[instSel.value]);
+        });
 
         let button = document.querySelector('.toggle');
         button.addEventListener('click', this.toggle.bind(this));
@@ -224,6 +256,10 @@ class App {
 
 
     update() {
+
+        if (this.timeoutID)
+            clearTimeout(this.timeoutID);
+        
         if (this.paused)
             return;
         
@@ -242,7 +278,6 @@ class App {
             if (cell.state & States.UP) {
                 if (y == 0) {
                     this.ding(x, Axis.VERTICAL);
-                    console.log('DING');
                     this.applyState(this.cellBuff, x, y + 1, States.DOWN);
                 }
                 else {
@@ -253,7 +288,6 @@ class App {
             if (cell.state & States.DOWN) {
                 if (y >= this.size - 1) {
                     this.ding(x, Axis.VERTICAL);
-                    console.log('DING');
                     this.applyState(this.cellBuff, x, y - 1, States.UP);
                 }
                 else {
@@ -265,7 +299,6 @@ class App {
             if (cell.state & States.LEFT) {
                 if (x == 0) {
                     this.ding(y, Axis.HORIZONTAL);
-                    console.log('DING');
                     this.applyState(this.cellBuff, x + 1, y, States.RIGHT);
                 } else {
                     this.applyState(this.cellBuff, x - 1, y, States.LEFT);
@@ -275,7 +308,6 @@ class App {
             if (cell.state & States.RIGHT) {
                 if (x >= this.size - 1) {
                     this.ding(y, Axis.HORIZONTAL);
-                    console.log('DING');
                     this.applyState(this.cellBuff, x - 1, y, States.LEFT);
                 } else {
                     this.applyState(this.cellBuff, x + 1, y, States.RIGHT);
@@ -300,7 +332,7 @@ class App {
             this.render();
         }, 0);
 
-        setTimeout(() => {
+        this.timeoutID = setTimeout(() => {
             this.update();
         }, this.speed);
     }
@@ -361,7 +393,6 @@ class App {
     decompress(str) {
         let match;
         while (match = str.match('_')) {
-            console.log(match);
             let len = str.substr(match.index+1, 2);
             len = parseInt(len, 16);
             let n = '0'.repeat(len);
@@ -374,6 +405,7 @@ class App {
         let dec = [];
         let hex = '';
         
+        dec.push(this.instrumentIndex);
         dec.push(this.size);
 
         let n = 0;
@@ -394,30 +426,45 @@ class App {
             
             hex += str;
         }
-
-        return this.compress(hex);
+        console.log(hex);
+        return 'v2,' + this.compress(hex);
     }
 
     deserialize(data) {
         data = this.decompress(data);
+        
+        
+        let version = 1;
 
+        
+        let vmatch;
+
+        if (vmatch = data.match('^v[0-9]+\,')) {
+            data = data.substr(vmatch[0].length);
+
+            version = vmatch[0].substring(1, vmatch[0].length - 1);
+        }
+
+        console.log(version, data);
         if (data.length % 2 == 1) {
             alert("Malformed state data")
             return;
         }
-        
 
         let dec = [];
 
         while (data.length) {
-            console.log(data.length);
             let byte = data.substr(0,2);
             data = data.substr(2);
 
             dec.push(parseInt(byte, 16));
         }
 
-
+        if (version == 2) {
+            let instrumentIndex = dec.shift();
+            this.setInstrument(Object.values(Instruments)[instrumentIndex]);
+        }
+        
         let size = dec.shift();
         this.size = size;
         
@@ -440,10 +487,10 @@ class App {
     ding(note, axis) {
         // let scale = ['floor-tom', 'low-tom', 'mid-tom', 'kick', 'snare', 'snare-side', 'closed-hat', 'pedal-high-hat', 'half-high-hat'];
         // let scale = ['kick', 'snare', 'kick', 'snare', 'kick', 'snare-side', 'closed-hat', 'pedal-high-hat', 'half-high-hat'];
-        let scale = ['c5', 'd5', 'e5', 'f5', 'g5', 'a6', 'b6', 'c6', 'd6'];
+        let scale = this.instrument.notes;//['c5', 'd5', 'e5', 'f5', 'g5', 'a6', 'b6', 'c6', 'd6'];
         let str = scale[note];
         
-        let aud = new Audio(`audio/scale/${str}.ogg`);
+        let aud = new Audio(`audio/${this.instrument.folder}/${str}.ogg`);
         aud.autoplay = true;
 
         for (let j = 0; j < this.size; ++j) {
@@ -461,13 +508,24 @@ class App {
         }
     }
 
+    setInstrument(instrument) {
+        this.instrumentIndex = Object.values(Instruments).indexOf(instrument);
+        this.instrument = instrument;
+        this.preload();
+
+        let instSel = document.querySelector('.instrument');
+        let target = Object.keys(Instruments)[this.instrumentIndex];
+        instSel.value = target;
+    }
+
     preload() {
-        let scale = ['c5', 'd5', 'e5', 'f5', 'g5', 'a6', 'b6', 'c6', 'd6'];
+        let folder = this.instrument.folder;
+        let notes = this.instrument.notes;
 
-        scale.forEach(() => {
-            let str = scale[note];
+        notes.forEach((note) => {
+            
 
-            let aud = new Audio(`audio/scale/${str}.ogg`);
+            let aud = new Audio(`audio/${folder}/${note}.ogg`);
             aud.autoplay = false;
         });
     }
