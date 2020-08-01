@@ -7,6 +7,7 @@
                 margin: 0;
                 background: #434856;
                 text-align: center;
+                font-family: 'Helvetica', Arial, sans-serif;
             }
 
             button {
@@ -14,7 +15,6 @@
                 color: white;
                 background: #142450;
                 padding: min(1.3vw, 1.3vh);
-                font-family: 'Helvetica', Arial, sans-serif;
                 font-weight: bold;
                 border-radius: min(0.5vw, 0.5vh);
                 font-size: min(1.6vw, 1.6vh);
@@ -87,6 +87,29 @@
                 background-image: url('asset/circle.svg');
             }
 
+            .hidden {
+                display: none;
+            }
+
+            .popup {
+                position: fixed;
+                left: 0;
+                top: 0;
+                transform: translate(-50%, -50%);
+                transition: all 0.5s ease-in 0.5s;
+                font-weight: bold;
+                color: white;
+                background: black;
+                border-radius: min(0.5vw, 0.5vh);
+                padding: min(0.6vw, 0.6vh);
+            }
+
+            .popup.active {
+                pointer-events: none;
+                opacity: 0;
+                transform: translate(-50%, calc(-50% - min(4vw, 4vh)));
+            }
+
             @keyframes ding {
                 0% {
                     background: #9a9a9a;
@@ -155,5 +178,6 @@
         <button class='save'>Save</button>
         <button class='saveURL'>Save as URL</button>
         <button class='load'>Load</button>
+        <span class='popup hidden'>Copied to clipboard!</span>
     </body>
 </html>

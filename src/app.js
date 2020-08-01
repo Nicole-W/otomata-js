@@ -43,6 +43,7 @@ class App {
             this.deserialize(hash.substr(1));
         }
     }
+
     init() {
 
         window.addEventListener('hashchange', this.loadFromHash.bind(this));
@@ -54,15 +55,20 @@ class App {
         clear.addEventListener('click', this.createGrid.bind(this));
 
         let save = document.querySelector('.save');
-        save.addEventListener('click', () => {
+        save.addEventListener('click', (ev) => {
             clipboard.copy(this.serialize());
-        });
 
+            this.showPopup('Copied to clipboard', ev.pageX, ev.pageY);
+        });
+        
         let saveURL = document.querySelector('.saveURL');
-        saveURL.addEventListener('click', () => {
+        saveURL.addEventListener('click', (ev) => {
             let code = this.serialize()
             let url = window.location.href.split('#')[0];
+
             clipboard.copy(`${url}#${code}`);
+
+            this.showPopup('Copied to clipboard', ev.pageX, ev.pageY);
         });
 
         let load = document.querySelector('.load');
@@ -84,6 +90,25 @@ class App {
         this.grid.addEventListener('contextmenu', this.onRightClick.bind(this));
 
         
+    }
+
+    showPopup(text, x, y) {
+        let popup = document.querySelector('.popup.hidden').cloneNode(true);
+        popup.textContent = text;
+        document.body.append(popup);
+
+        popup.style.left = x + 'px';
+        popup.style.top = y + 'px';
+
+        popup.classList.remove('hidden')
+
+        setTimeout(() => {
+            popup.classList.add('active');
+        }, 0);
+
+        setTimeout(() => {
+            popup.remove();
+        }, 1000)
     }
 
     createGrid() {
