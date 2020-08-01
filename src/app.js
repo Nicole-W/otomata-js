@@ -1,3 +1,5 @@
+import clipboard from './clipboard.js';;
+
 const States = {
     EMPTY : 0,
     UP : 1,
@@ -27,15 +29,48 @@ class App {
         this.paused = true;
         this.size = 9;
 
+        this.init();
         this.createGrid();
 
+
+        this.loadFromHash();
     }
 
-    createGrid() {
-        let size = this.size;
+    loadFromHash() {
+        let hash = window.location.hash;
+
+        if (hash) {
+            this.deserialize(hash.substr(1));
+        }
+    }
+    init() {
+
+        window.addEventListener('hashchange', this.loadFromHash.bind(this));
 
         let button = document.querySelector('.toggle');
         button.addEventListener('click', this.toggle.bind(this));
+
+        let clear = document.querySelector('.clear');
+        clear.addEventListener('click', this.createGrid.bind(this));
+
+        let save = document.querySelector('.save');
+        save.addEventListener('click', () => {
+            clipboard.copy(this.serialize());
+        });
+
+        let saveURL = document.querySelector('.saveURL');
+        saveURL.addEventListener('click', () => {
+            let code = this.serialize()
+            let url = window.location.href.split('#')[0];
+            clipboard.copy(`${url}#${code}`);
+        });
+
+        let load = document.querySelector('.load');
+        
+        load.addEventListener('click', () => {
+            let data = prompt('Enter data:');
+            this.deserialize(data);
+        });
 
         let stepBTN = document.querySelector('.step');
         stepBTN.addEventListener('click', () => {
@@ -47,6 +82,19 @@ class App {
         this.grid = document.querySelector('.grid');
         this.grid.addEventListener('click', this.onClick.bind(this));
         this.grid.addEventListener('contextmenu', this.onRightClick.bind(this));
+
+        
+    }
+
+    createGrid() {
+        let size = this.size;
+        
+        this.cells = [];
+        this.cellBuff = [];
+        
+        while (this.grid.children.length) {
+            this.grid.children[0].remove();
+        }
 
         for (let i = 0; i < size; ++i) {
             for (let j = 0; j < size; ++j) {
@@ -63,7 +111,6 @@ class App {
         this.grid.style.display = 'grid';
         this.grid.style.gridTemplateColumns = '11% '.repeat(size);
         this.grid.style.gridTemplateRows = '11% '.repeat(size);
-        
     }
 
     toggle() {
@@ -138,7 +185,6 @@ class App {
             newState |= States.UP;
         }
 
-        // console.log(`Rotated ${state} to ${newState}`)
         return newState;
     }
 
@@ -268,6 +314,102 @@ class App {
                 cellEl.classList.add('right');
             }
         }
+    }
+
+    compress(str) {
+        let match;
+        while (match = str.match('0{2,}')) {
+            let n = (match[0].length).toString(16);
+
+            if (n.length == 1)
+                n = '0' + n;
+            
+            n = '_' + n;
+            
+            str = str.substr(0, match.index) + n + str.substr(match.index + match[0].length);
+
+        }
+
+        return str;
+    }
+
+    decompress(str) {
+        let match;
+        while (match = str.match('_')) {
+            console.log(match);
+            let len = str.substr(match.index+1, 2);
+            len = parseInt(len, 16);
+            let n = '0'.repeat(len);
+            str = str.substr(0, match.index) + n + str.substr(match.index + 3);
+        }
+        return str;
+    }
+
+    serialize() {
+        let dec = [];
+        let hex = '';
+        
+        dec.push(this.size);
+
+        let n = 0;
+        for (let i = 0; i < this.cells.length; ++i) {
+            if (i % 2 == 0) {
+                n = this.cells[i].state << 4;
+            } else {
+                n = n | this.cells[i].state;
+                dec.push(n);
+            }
+        }
+
+        for (let i = 0; i < dec.length; ++i) {
+            let str = (dec[i]).toString(16);
+
+            if (str.length == 1)
+                str = '0' + str;
+            
+            hex += str;
+        }
+
+        return this.compress(hex);
+    }
+
+    deserialize(data) {
+        data = this.decompress(data);
+
+        if (data.length % 2 == 1) {
+            alert("Malformed state data")
+            return;
+        }
+        
+
+        let dec = [];
+
+        while (data.length) {
+            console.log(data.length);
+            let byte = data.substr(0,2);
+            data = data.substr(2);
+
+            dec.push(parseInt(byte, 16));
+        }
+
+
+        let size = dec.shift();
+        this.size = size;
+        
+        this.createGrid();
+
+        for (let i = 0; i < dec.length; ++i) {
+            let cellA = this.cells[i * 2];
+            let cellB = this.cells[i * 2 + 1];
+
+            let states = dec[i];
+
+            cellB.state = (states & States.UP) | (states & States.DOWN) | (states & States.LEFT) | (states & States.RIGHT);
+            states = (states & ~cellB.state) >> 4;
+            cellA.state = (states & States.UP) | (states & States.DOWN) | (states & States.LEFT) | (states & States.RIGHT);
+        }
+
+        this.render();
     }
 
     ding(note, axis) {
